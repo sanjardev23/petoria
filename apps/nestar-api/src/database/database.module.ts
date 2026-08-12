@@ -14,6 +14,7 @@ import { Connection } from 'mongoose';
 })
 export class DatabaseModule {
 	constructor(@InjectConnection() private readonly connection: Connection) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
 		if (connection.readyState === 1) {
 			console.log(`MongoDB is connected into ${process.env.NODE_ENV === 'production' ? 'production' : 'development'}`);
 		} else {
