@@ -2,15 +2,16 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
 import { MemberService } from '../member/member.service';
-import { PropertyInput } from '../../libs/dto/property/property.input';
-import { Property } from '../../libs/dto/property/property';
-import { Message } from '../../libs/enums/common.enum';
+import { PropertiesInquiry, PropertyInput } from '../../libs/dto/property/property.input';
+import { Properties, Property } from '../../libs/dto/property/property';
+import { Direction, Message } from '../../libs/enums/common.enum';
 import { ViewService } from '../view/view.service';
 import { PropertyStatus } from '../../libs/enums/property.enum';
 import { StatisticModifier, T } from '../../libs/types/common';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
 import moment from 'moment';
+import { lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
 
 @Injectable()
 export class PropertyService {
@@ -106,5 +107,66 @@ export class PropertyService {
 		}
 
 		return result;
+	}
+
+	public async getProperties(memberId: ObjectId, input: PropertiesInquiry): Promise<Properties> {
+		const match: T = { propertyStatus: PropertyStatus.ACTIVE };
+		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
+
+		this.shapeMatchQuery(match, input);
+		console.log('match:', match);
+
+		const result = await this.propertyModel
+			.aggregate([
+				{ $match: match },
+				{ $sort: sort },
+				{
+					$facet: {
+						list: [
+							{ $skip: (input.page - 1) * input.limit },
+							{ $limit: input.limit },
+							// meLiked
+							lookupMember,
+							{ $unwind: '$memberData' },
+						],
+						metaCounter: [{ $count: 'total' }],
+					},
+				},
+			])
+			.exec();
+		if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+		return result[0] as Properties;
+	}
+
+	private shapeMatchQuery(match: T, input: PropertiesInquiry): void {
+		const {
+			memberId,
+			locationList,
+			roomsList,
+			bedsList,
+			typeList,
+			periodsRange,
+			pricesRange,
+			squaresRange,
+			options,
+			text,
+		} = input.search;
+		if (memberId) match.memberId = shapeIntoMongoObjectId(memberId);
+		if (locationList) match.propertyLocation = { $in: locationList };
+		if (roomsList) match.propertyRooms = { $in: roomsList };
+		if (bedsList) match.propertyBeds = { $in: bedsList };
+		if (typeList) match.propertyType = { $in: typeList };
+
+		if (pricesRange) match.propertyPrice = { $gte: pricesRange.start, $lte: pricesRange.end };
+		if (periodsRange) match.createdAt = { $gte: periodsRange.start, $lte: periodsRange.end };
+		if (squaresRange) match.propertySquare = { $gte: squaresRange.start, $lte: squaresRange.end };
+
+		if (text) match.propertyTitle = { $regex: new RegExp(text, 'i') };
+		if (options) {
+			match['$or'] = options.map((ele) => {
+				return { [ele]: true };
+			});
+		}
 	}
 }
