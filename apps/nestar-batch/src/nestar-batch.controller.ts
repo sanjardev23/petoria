@@ -1,9 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
-import { NestarBatchService } from './nestar-batch.service';
+import { BatchService } from './batch.service';
 
 @Controller()
-export class NestarBatchController {
-	constructor(private readonly nestarBatchService: NestarBatchService) {}
+export class BatchController {
+	constructor(private readonly nestarBatchService: BatchService) {}
 
 	@Get()
 	getHello(): string {
