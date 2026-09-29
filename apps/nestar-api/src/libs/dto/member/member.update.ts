@@ -48,5 +48,5 @@ export class MemberUpdate {
 	@Field(() => String, { nullable: true })
 	memberDesc?: string; // Corrected typo 'memberDesx' from screenshot
 
-	deleteAt?: Date;
+	deletedAt?: Date;
 }
