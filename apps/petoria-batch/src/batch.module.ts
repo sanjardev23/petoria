@@ -4,9 +4,9 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MongooseModule } from '@nestjs/mongoose';
-import { BatchController } from './nestar-batch.controller';
-import MemberSchema from '../../nestar-api/src/schemas/Member.model';
-import PropertySchema from '../../nestar-api/src/schemas/Property.model';
+import { BatchController } from './batch.controller';
+import MemberSchema from '../../petoria-api/src/schemas/Member.model';
+import PropertySchema from '../../petoria-api/src/schemas/Property.model';
 
 @Module({
 	imports: [

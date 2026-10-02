@@ -12,22 +12,21 @@ Backend for Petoria. The frontend is in the sibling project `../petoria-next`.
 
 NestJS monorepo with two apps:
 
-- `apps/nestar-api` — GraphQL API (Apollo) + MongoDB (Mongoose) + JWT auth + WebSocket chat
+- `apps/petoria-api` — GraphQL API (Apollo) + MongoDB (Mongoose) + JWT auth + WebSocket chat
   - `src/components/` — feature modules: auth, member, property, board-article, comment, follow, like, view
   - `src/schemas/` — Mongoose models
   - `src/libs/` — config, dto, enums, types, interceptor
   - `src/socket/` — WebSocket chat gateway
-- `apps/nestar-batch` — scheduled batch jobs (batchRollback, batchProperties, batchAgents)
+- `apps/petoria-batch` — scheduled batch jobs (batchRollback, batchProperties, batchAgents)
 
 Env variables are in `.env` (PORT_API, PORT_BATCH, MONGO_DEV, MONGO_PROD, SECRET_TOKEN). **Never read out, change, or commit `.env` without asking.**
 
 ## Migration: nestar → petoria
 
-We are **migrating this project from `nestar` to `petoria`**. The old name still appears in many places, for example:
+We are **migrating this project from `nestar` to `petoria`**.
 
-- app folders `apps/nestar-api`, `apps/nestar-batch`
-- `package.json` name and scripts, `nest-cli.json`, `tsconfig.app.json` files
-- some code inside `src/` (e.g. `app.service.ts`, `batch.module.ts`, `batch.service.ts`) and tests
+- **Done:** project/app names (folders `apps/petoria-api`, `apps/petoria-batch`, `package.json` name and scripts, `nest-cli.json`, `tsconfig.app.json`, welcome texts, tests).
+- **Still old:** the real-estate domain (property, agent) — the next step is changing it into a pet shop.
 
 Rules for the migration:
 

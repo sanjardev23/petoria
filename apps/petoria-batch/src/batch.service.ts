@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Member } from '../../nestar-api/src/libs/dto/member/member';
-import { Property } from '../../nestar-api/src/libs/dto/property/property';
-import { MemberStatus, MemberType } from '../../nestar-api/src/libs/enums/member.enum';
-import { PropertyStatus } from '../../nestar-api/src/libs/enums/property.enum';
+import { Member } from '../../petoria-api/src/libs/dto/member/member';
+import { Property } from '../../petoria-api/src/libs/dto/property/property';
+import { MemberStatus, MemberType } from '../../petoria-api/src/libs/enums/member.enum';
+import { PropertyStatus } from '../../petoria-api/src/libs/enums/property.enum';
 
 @Injectable()
 export class BatchService {
@@ -68,6 +68,6 @@ export class BatchService {
 	}
 
 	public getHello(): string {
-		return 'Welcome to Nestar BATCH Server!';
+		return 'Welcome to Petoria BATCH Server!';
 	}
 }

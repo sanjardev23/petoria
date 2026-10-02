@@ -1,31 +1,31 @@
 {
 	"$schema": "https://json.schemastore.org/nest-cli",
 	"collection": "@nestjs/schematics",
-	"sourceRoot": "apps/nestar-api/src",
+	"sourceRoot": "apps/petoria-api/src",
 	"compilerOptions": {
 		"deleteOutDir": true,
 		"webpack": true,
-		"tsConfigPath": "apps/nestar-api/tsconfig.app.json"
+		"tsConfigPath": "apps/petoria-api/tsconfig.app.json"
 	},
 	"monorepo": true,
-	"root": "apps/nestar-api",
+	"root": "apps/petoria-api",
 	"projects": {
-		"nestar-api": {
+		"petoria-api": {
 			"type": "application",
-			"root": "apps/nestar-api",
+			"root": "apps/petoria-api",
 			"entryFile": "main",
-			"sourceRoot": "apps/nestar-api/src",
+			"sourceRoot": "apps/petoria-api/src",
 			"compilerOptions": {
-				"tsConfigPath": "apps/nestar-api/tsconfig.app.json"
+				"tsConfigPath": "apps/petoria-api/tsconfig.app.json"
 			}
 		},
-		"nestar-batch": {
+		"petoria-batch": {
 			"type": "application",
-			"root": "apps/nestar-batch",
+			"root": "apps/petoria-batch",
 			"entryFile": "main",
-			"sourceRoot": "apps/nestar-batch/src",
+			"sourceRoot": "apps/petoria-batch/src",
 			"compilerOptions": {
-				"tsConfigPath": "apps/nestar-batch/tsconfig.app.json"
+				"tsConfigPath": "apps/petoria-batch/tsconfig.app.json"
 			}
 		}
 	}
