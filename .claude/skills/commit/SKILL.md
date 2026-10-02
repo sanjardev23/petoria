@@ -52,10 +52,10 @@ Rules:
 
 ## 5. Branch and push
 
-- Work and commit on the **`develop`** branch.
-- The project uses two branches: `master` and `develop`.
-- After committing, **remind the user to push** to `develop`, and push only when they say yes (or if they already said "commit and push").
-- Push with: `git push` (develop already tracks `origin/develop`).
+- Work and commit on the **`modification`** branch (the nestar → petoria migration branch).
+- The project has three branches: `master`, `develop`, and `modification`. Do not switch branches without asking.
+- After committing, **remind the user to push** to `modification`, and push only when they say yes (or if they already said "commit and push").
+- Push with: `git push`. If `modification` is not linked to GitHub yet, the first push is `git push -u origin modification`.
 - Do NOT open pull requests.
 
 ## 6. Always ask before risky git actions
