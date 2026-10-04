@@ -20,8 +20,8 @@
 | D10 | AI handoff docs live in `docs/ai/`; project rules and skills live in `CLAUDE.md` and `.claude/skills/` | Accepted (2026-10-05) |
 | P1 | **Product** becomes the main entity, with `ProductType` `PET, FOOD, TOY, ACCESSORY` + `productSpecies` + `productGender` | **Accepted** (2026-10-05) |
 | P2 | `MemberType.AGENT` → `SELLER` | **Rejected** (2026-10-05): `AGENT` stays |
-| P3 | Replace the property module in place; new `products` collection; keep old data | Proposed |
-| P4 | Keep the location enum (renamed `ProductLocation`) | Proposed |
+| P3 | Replace the property module in place; new `products` collection; drop the old `properties` collection (dev DB) after the product code works | **Accepted** (2026-10-05) |
+| P4 | Keep the location enum (renamed `ProductLocation`) | **Accepted** (2026-10-05) |
 | P5 | Orders / cart / payment are out of scope for now | Proposed |
 | P6 | Move `OrdinaryInquiry` to a common DTO file | Proposed |
 | P7 | Migrate the frontend after the backend, as a separate task in `petoria-next` | Proposed |
@@ -85,6 +85,12 @@
 
 ## Decided by the owner (2026-10-05, in `CLAUDE.md` Domain Rules)
 
+### Product details (2026-10-05)
+- `ProductStatus`: `ACTIVE`, `SOLD_OUT`, `DELETE`.
+- `productSpecies` is required for every product. `productGender` and `productBirthDate` are only for `PET`.
+- No `productStock`, `productBrand`, `productOnSale`, `productFreeDelivery`. The `options` filter is removed.
+- Full target model: [ER_MODEL.md](ER_MODEL.md).
+
 ### P1: Product as the main entity: Accepted
 - **Decision:** One `Product` entity. Pets are products too: `ProductType` = `PET`, `FOOD`, `TOY`, `ACCESSORY`. Extra fields: `productSpecies` (`DOG`, `CAT`, `BIRD`, `FISH`) and `productGender` (`MALE`, `FEMALE`). Do not bring back property or real-estate fields.
 - **Why:** The property shape (title, price, images, desc, status, location, likes/views/comments/rank, owner) maps almost 1-to-1 to a product. One module covers both pets and pet goods.
@@ -97,12 +103,13 @@
 
 ## Proposed (needs confirmation before implementation)
 
-### P3: Replace in place + new `products` collection
+### P3: Replace in place + new `products` collection: Accepted (2026-10-05)
+- **Decision:** The property code becomes product code. Products live in a new, empty `products` collection. The old real-estate documents cannot be converted (no species, type or gender), so the `properties` collection is **dropped from the dev DB** in the clean-up step, after the product code works. Check the document count first. Production is not touched without a separate OK.
 - **Why:** It avoids two parallel modules. A fresh collection avoids mixing old real-estate documents with new product documents. The old `properties` data stays untouched as a fallback.
 - **Risks:** A breaking GraphQL change. Dev data in `properties` is not visible in the new UI.
 - **Alternatives:** Add `product` next to `property` and remove `property` later (safer rollout, temporary duplication); migrate documents from `properties` → `products` with a script.
 
-### P4: Keep the location enum
+### P4: Keep the location enum: Accepted (2026-10-05)
 - **Why:** The search UI already filters by city. A shop listing can still have a city (pickup/delivery area).
 - **Risks:** It may not be needed for an online shop.
 - **Alternatives:** Remove location; replace it with a free-text address or delivery zones.

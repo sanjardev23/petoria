@@ -8,8 +8,8 @@
 
 | # | Task | Why |
 |---|---|---|
-| 0.1 | Confirm the remaining proposals P3–P7 in [DECISIONS.md](DECISIONS.md): replace-in-place + new `products` collection, keep location, orders deferred, `OrdinaryInquiry` move, frontend after backend | The domain layer (1.1) depends on P3, P4, P6 |
-| 0.2 | Decide the product details that `CLAUDE.md` does not cover: `ProductStatus` values, `productGender` nullability (it only fits `PET`), keep `productBrand`/`productStock`/`productOnSale`/`productFreeDelivery` or not | Needed for the product schema and DTOs |
+| 0.1 | Confirm the remaining proposals P5–P7 in [DECISIONS.md](DECISIONS.md): orders deferred, `OrdinaryInquiry` move, frontend after backend. P3 and P4 were accepted on 2026-10-05 | The domain layer (1.1) uses P6 |
+| 0.2 | ✅ Done 2026-10-05. Product details decided, see [ER_MODEL.md](ER_MODEL.md) | — |
 
 P1 (Product) and P2 (keep `AGENT`) were decided on 2026-10-05. The old "role layer" (`AGENT` → `SELLER`) is **cancelled**.
 
@@ -22,7 +22,7 @@ P1 (Product) and P2 (keep `AGENT`) were decided on 2026-10-05. The old "role lay
 | 1.3 | Batch: product + agent ranking | `apps/petoria-batch/src/{batch.module,batch.service,batch.controller}.ts`, `lib/config.ts` | `BATCH_TOP_PROPERTIES` → `BATCH_TOP_PRODUCTS`. `BATCH_TOP_AGENTS` stays; its formula uses `memberProducts` |
 | 1.4 | I4: add `$project: { 'memberData.memberPassword': 0 }` after `lookupMember` | `libs/config.ts` or each aggregation | Defence in depth, no API change |
 | 1.5 | Optional: move shared code (schemas, DTOs, enums) to a Nest `libs/` library so batch does not import `../../petoria-api/src` | `nest-cli.json`, `tsconfig.json` paths | Separate task. Bigger change |
-| 1.6 | Optional: data plan for dev DB (group `PROPERTY` → `PRODUCT`) | MongoDB (dev) | **Ask before touching data**. `memberType: 'AGENT'` needs no change |
+| 1.6 | Drop the `properties` collection from the dev DB (approved 2026-10-05, P3). Optional: remove old likes/views/comments with group `PROPERTY` | MongoDB (dev) | Do it after 1.1 works. Count documents first. Old group docs need a separate OK. `memberType: 'AGENT'` needs no change |
 
 ## 2. Frontend migration (`../petoria-next`)
 
