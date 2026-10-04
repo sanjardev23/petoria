@@ -1,13 +1,15 @@
 # Backend Migration: Nestar → Petoria
 
-> Status as of **2026-10-03** · branch `modification` · last migration commit `f9c138e fix: Modify project name into petoria`
+> Status as of **2026-10-05** · branch `modification` · last migration commit `f9c138e fix: Modify project name into petoria`
+> The **Domain Rules** in `CLAUDE.md` win over anything in this file.
 
 Every item in this file is labelled with one of these statuses:
 
 | Label | Meaning |
 |---|---|
 | ✅ **Done** | Implemented, verified, and committed |
-| 🟡 **Proposed** | Designed in the previous session but **not confirmed by the project owner yet**. Confirm it before you implement it. |
+| 🟢 **Accepted** | Decided by the project owner (in `CLAUDE.md` Domain Rules), not implemented yet |
+| 🟡 **Proposed** | Designed in an earlier session but **not confirmed by the project owner yet**. Confirm it before you implement it. |
 | ⬜ **Unchanged** | Kept as-is on purpose |
 
 ---
@@ -38,13 +40,14 @@ Batch jobs (`batch.controller.ts`):
 
 A **pet shop** platform. It keeps the same infrastructure: members, auth, community, likes, views, follows, comments, chat, and batch ranking. The real-estate domain is replaced by a pet-shop domain.
 
-🟡 **Proposed domain:** **Product** (pet products: food, toys, accessories…) replaces Property, and the **SELLER** role replaces AGENT. See [DECISIONS.md](DECISIONS.md) P1–P7.
+🟢 **Accepted domain:** **Product** replaces Property. A product has a `ProductType` (`PET`, `FOOD`, `TOY`, `ACCESSORY`), a `productSpecies` (`DOG`, `CAT`, `BIRD`, `FISH`) and a `productGender` (`MALE`, `FEMALE`).
+🟢 **Accepted role:** `MemberType.USER`, `AGENT`, `ADMIN` stay **unchanged**. Products are owned by `AGENT` members. There is **no** `SELLER` role. See [DECISIONS.md](DECISIONS.md) P1, P2.
 
 ## 3. Backend migration goal
 
 1. ✅ **Rename layer:** every project/app identifier says Petoria, with **no change** to business logic, the GraphQL API, or MongoDB.
-2. 🟡 **Role layer:** `MemberType.AGENT` → `SELLER`.
-3. 🟡 **Domain layer:** the property module → a product module (new schema, DTOs, resolver, service, batch jobs).
+2. ~~Role layer: `AGENT` → `SELLER`~~ **Cancelled.** `MemberType.AGENT` stays (CLAUDE.md Domain Rules).
+3. 🟢 **Domain layer:** the property module → a product module (new schema, DTOs, resolver, service, batch jobs). The details below that `CLAUDE.md` does not decide are still 🟡.
 4. Keep the backend and frontend (`../petoria-next`) in sync whenever a GraphQL name changes.
 
 ## 4. Naming changes
@@ -69,34 +72,31 @@ A **pet shop** platform. It keeps the same infrastructure: members, auth, commun
 
 A case-insensitive `grep -rniI nestar` (excluding `node_modules`, `dist`, `.claude`) now finds the word only in the migration notes in `CLAUDE.md`.
 
-### 4.2 Proposed role + domain renames 🟡
+### 4.2 Domain renames
 
-| Old | New |
-|---|---|
-| `MemberType.AGENT` | `MemberType.SELLER` |
-| `availableAgentSorts` | `availableSellerSorts` |
-| `AgentsInquiry` | `SellersInquiry` |
-| `getAgents` (resolver/service) | `getSellers` |
-| `memberProperties` (schema + DTO) | `memberProducts` |
-| `availablePropertySorts` | `availableProductSorts` = `createdAt, updatedAt, productLikes, productViews, productRank, productPrice` |
-| `availableOptions = ['propertyBarter','propertyRent']` | `['productOnSale','productFreeDelivery']` |
-| `lookupFavorite` / `lookupVisit` paths `favoriteProperty.*` / `visitedProperty.*` | `favoriteProduct.*` / `visitedProduct.*` |
-| `BATCH_TOP_PROPERTIES`, `batchTopProperties` | `BATCH_TOP_PRODUCTS`, `batchTopProducts` |
-| `BATCH_TOP_AGENTS`, `batchTopAgents` | `BATCH_TOP_SELLERS`, `batchTopSellers` |
+Agent names stay as they are (⬜): `MemberType.AGENT`, `availableAgentSorts`, `AgentsInquiry`, `getAgents`, `BATCH_TOP_AGENTS`, `batchTopAgents`.
+
+| Old | New | Status |
+|---|---|---|
+| `memberProperties` (schema + DTO) | `memberProducts` | 🟢 (used by the `backend-migration` skill) |
+| `availablePropertySorts` | `availableProductSorts` = `createdAt, updatedAt, productLikes, productViews, productRank, productPrice` | 🟡 |
+| `availableOptions = ['propertyBarter','propertyRent']` | `['productOnSale','productFreeDelivery']` | 🟡 |
+| `lookupFavorite` / `lookupVisit` paths `favoriteProperty.*` / `visitedProperty.*` | `favoriteProduct.*` / `visitedProduct.*` | 🟢 |
+| `BATCH_TOP_PROPERTIES`, `batchTopProperties` | `BATCH_TOP_PRODUCTS`, `batchTopProducts` | 🟢 |
 
 ## 5. Module changes
 
-| Module / file | Current state | Proposed change 🟡 |
+| Module / file | Current state | Planned change |
 |---|---|---|
-| `components/property/*` | ⬜ Real-estate CRUD, likes, favorites, visited, admin | Replace with `components/product/{product.module,product.resolver,product.service}.ts`, using the same method set with new names (see §6) |
-| `libs/dto/property/*` | ⬜ `Property`, `Properties`, `PropertyInput`, `PropertiesInquiry`, `AgentPropertiesInquiry`, `AllPropertiesInquiry`, `OrdinaryInquiry`, `PropertyUpdate`, ranges | `libs/dto/product/*`. Move `OrdinaryInquiry` to `libs/dto/common.input.ts` (it is generic paging) and remove `SquaresRange` |
-| `libs/enums/property.enum.ts` | ⬜ `PropertyType`, `PropertyStatus`, `PropertyLocation` | `libs/enums/product.enum.ts`: `ProductCategory`, `ProductPetType`, `ProductStatus`, `ProductLocation` |
+| `components/property/*` | ⬜ Real-estate CRUD, likes, favorites, visited, admin | 🟢 Replace with `components/product/{product.module,product.resolver,product.service}.ts`, using the same method set with new names (see §6). Keep the resolver/service/module pattern |
+| `libs/dto/property/*` | ⬜ `Property`, `Properties`, `PropertyInput`, `PropertiesInquiry`, `AgentPropertiesInquiry`, `AllPropertiesInquiry`, `OrdinaryInquiry`, `PropertyUpdate`, ranges | 🟢 `libs/dto/product/*`. 🟡 Move `OrdinaryInquiry` to `libs/dto/common.input.ts` (it is generic paging) and remove `SquaresRange` |
+| `libs/enums/property.enum.ts` | ⬜ `PropertyType`, `PropertyStatus`, `PropertyLocation` | 🟢 `libs/enums/product.enum.ts` with `ProductType` (`PET, FOOD, TOY, ACCESSORY`) and enums for `productSpecies` (`DOG, CAT, BIRD, FISH`) and `productGender` (`MALE, FEMALE`). 🟡 `ProductStatus`, `ProductLocation` |
 | `components/like/like.service.ts` | ⬜ `getFavoriteProperties` (`$lookup from: 'properties'`) | `getFavoriteProducts` (`from: 'products'`) |
 | `components/view/view.service.ts` | ⬜ `getVisitedProperties` (`$lookup from: 'properties'`) | `getVisitedProducts` |
 | `components/comment/*` | ⬜ Imports `PropertyModule`, calls `propertyStatsEditor(... 'propertyComments')` | `ProductModule`, `productStatsEditor(... 'productComments')` |
-| `components/member/*` | ⬜ `getAgents`, `Roles(USER, AGENT)` | `getSellers`, `Roles(USER, SELLER)` |
+| `components/member/*` | ⬜ `getAgents`, `Roles(USER, AGENT)` | ⬜ No role change. Only `memberProperties` → `memberProducts` |
 | `components/components.module.ts` | ⬜ Imports `PropertyModule` | Imports `ProductModule` |
-| `apps/petoria-batch/src/*` | ⬜ Property + agent ranking | Product + seller ranking |
+| `apps/petoria-batch/src/*` | ⬜ Property + agent ranking | Product + agent ranking (agent rank uses `memberProducts`) |
 | Other modules (`auth`, `board-article`, `follow`, `socket`, `database`) | ⬜ No domain dependency | None |
 
 ## 6. GraphQL changes
@@ -109,22 +109,19 @@ Proposed renames 🟡. Each one is a **breaking change** for `petoria-next`:
 |---|---|---|
 | Object type | `Property`, `Properties` | `Product`, `Products` |
 | Input type | `PropertyInput`, `PropertyUpdate` | `ProductInput`, `ProductUpdate` |
-| Input type | `PropertiesInquiry`, `AgentPropertiesInquiry`, `AllPropertiesInquiry` | `ProductsInquiry`, `SellerProductsInquiry`, `AllProductsInquiry` |
-| Input type (nested, also public names) | `PISearch`, `APISearch`, `ALPISearch`, `SquaresRange` | Rename to match (e.g. `ProductSearch`, `SellerProductSearch`, `AllProductSearch`); remove `SquaresRange` |
-| Input type | `AgentsInquiry` | `SellersInquiry` |
-| Enum | `PropertyType` | `ProductCategory` (+ new `ProductPetType`) |
-| Enum | `PropertyStatus` (`ACTIVE, SOLD, DELETE`) | `ProductStatus` (`ACTIVE, SOLD_OUT, DELETE`) |
-| Enum | `PropertyLocation` | `ProductLocation` (same city values) |
-| Enum value | `MemberType.AGENT` | `MemberType.SELLER` |
+| Input type | `PropertiesInquiry`, `AgentPropertiesInquiry`, `AllPropertiesInquiry` | `ProductsInquiry`, `AgentProductsInquiry`, `AllProductsInquiry` |
+| Input type (nested, also public names) | `PISearch`, `APISearch`, `ALPISearch`, `SquaresRange` | Rename to match (e.g. `ProductSearch`, `AgentProductSearch`, `AllProductSearch`); remove `SquaresRange` |
+| Enum | `PropertyType` | 🟢 `ProductType` (`PET, FOOD, TOY, ACCESSORY`) + new enums for `productSpecies` and `productGender` |
+| Enum | `PropertyStatus` (`ACTIVE, SOLD, DELETE`) | 🟡 `ProductStatus` (`ACTIVE, SOLD_OUT, DELETE`) |
+| Enum | `PropertyLocation` | 🟡 `ProductLocation` (same city values) |
 | Enum value | `LikeGroup/ViewGroup/CommentGroup/NotificationGroup.PROPERTY` | `.PRODUCT` |
 | Query | `getProperty(propertyId)` | `getProduct(productId)` |
-| Query | `getProperties`, `getAgentProperties`, `getAllPropertiesByAdmin` | `getProducts`, `getSellerProducts`, `getAllProductsByAdmin` |
-| Query | `getAgents` | `getSellers` |
+| Query | `getProperties`, `getAgentProperties`, `getAllPropertiesByAdmin` | `getProducts`, `getAgentProducts`, `getAllProductsByAdmin` |
 | Query | `getFavorites`, `getVisited` | Same names; return type becomes `Products` |
 | Mutation | `createProperty`, `updateProperty`, `likeTargetProperty(propertyId)` | `createProduct`, `updateProduct`, `likeTargetProduct(productId)` |
 | Mutation | `updatePropertyByAdmin`, `removePropertyByAdmin(propertyId)` | `updateProductByAdmin`, `removeProductByAdmin(productId)` |
 
-Unchanged in every phase: `signup`, `login`, `updateMember`, `getMember`, `likeTargetMember`, all board-article, comment, and follow operations, `sayHello`.
+Unchanged in every phase: `signup`, `login`, `updateMember`, `getMember`, `getAgents`, `AgentsInquiry`, `MemberType` (`USER, AGENT, ADMIN`), `likeTargetMember`, all board-article, comment, and follow operations, `sayHello`.
 
 ## 7. MongoDB collection / schema changes
 
@@ -138,15 +135,17 @@ Proposed 🟡:
 | Model name | `'Property'` | `'Product'` |
 | Unique index | `{propertyType, propertyLocation, propertyTitle, propertyPrice}` | `{memberId: 1, productTitle: 1}` |
 | `members.memberProperties` | counter | `memberProducts` |
-| `members.memberType` | `'AGENT'` values | `'SELLER'` (dev data: re-create or migrate **only after the owner approves**) |
+| `members.memberType` | `'AGENT'` values | ⬜ unchanged (`AGENT` stays) |
 | `likes.likeGroup`, `views.viewGroup`, `comments.commentGroup` | `'PROPERTY'` | `'PRODUCT'` |
 | `notifications.propertyId` (ref `'Property'`) | — | `productId` (ref `'Product'`) |
 
-Field mapping (Property → Product) 🟡:
+Field mapping (Property → Product). 🟢 rows come from `CLAUDE.md`; the rest is 🟡:
 
 | Property field | Product field |
 |---|---|
-| `propertyType` | `productCategory` (FOOD, TREAT, TOY, ACCESSORY, CLOTHING, HEALTH, GROOMING, HOUSING) + new `productPetType` (DOG, CAT, BIRD, FISH, SMALL_ANIMAL, REPTILE) |
+| `propertyType` | 🟢 `productType` (`PET, FOOD, TOY, ACCESSORY`) |
+| (new) | 🟢 `productSpecies` (`DOG, CAT, BIRD, FISH`) |
+| (new) | 🟢 `productGender` (`MALE, FEMALE`). Nullability is not decided yet (it only makes sense for `PET`) |
 | `propertyStatus` | `productStatus` |
 | `propertyLocation` | `productLocation` |
 | `propertyAddress` | removed |
@@ -164,9 +163,9 @@ Field mapping (Property → Product) 🟡:
 |---|---|---|
 | C1 | The rename layer did not change the GraphQL schema or the DB | The frontend and existing data still work as they are |
 | C2 | Every proposed GraphQL rename (§6) breaks `petoria-next` until its Apollo operations, types, and enums are updated | Ship backend and frontend changes together, or keep the old names for a short time |
-| C3 | Existing dev documents use `memberType: 'AGENT'` and group value `'PROPERTY'` | After the enum change they fail validation or stop matching queries. Plan a data migration or reseed (needs approval) |
+| C3 | Existing dev documents use the group value `'PROPERTY'` (`memberType: 'AGENT'` stays valid) | After the group enum change they stop matching queries. Plan a data migration or reseed (needs approval) |
 | C4 | The batch app imports API code by relative path (`../../petoria-api/src/...`) | Any future folder move must update these imports. A shared `libs/` package could remove this coupling |
 | C5 | An old `dist/apps/nestar-*` build may still exist | It is git-ignored, and `deleteOutDir: true` cleans it on the next `nest build` |
-| C6 | A stale process (PID 92147, `node dist/apps/nestar-api/main`, started 2026-10-02) was listening on **port 3008** | `npm run start:dev:batch` fails with `EADDRINUSE` until it is stopped. During the check the batch app was tested with `PORT_BATCH=3018` |
+| C6 | ✅ Resolved. A stale process (PID 92147) held **port 3008** on 2026-10-03. On 2026-10-05 the port was free | `npm run start:dev:batch` can use its default port again |
 | C7 | Both e2e specs expect `'Hello World!'` from `GET /`, but the apps return the welcome strings | The e2e tests fail. This was already broken before the rename and is not caused by it |
 | C8 | `.env` keys (`PORT_API`, `PORT_BATCH`, `MONGO_DEV`, `MONGO_PROD`, `SECRET_TOKEN`) contain no project name | No env change is needed for any phase |

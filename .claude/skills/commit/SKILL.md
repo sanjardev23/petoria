@@ -66,4 +66,4 @@ Ask the user first before: force-push, deleting branches, rewriting history (ren
 
 - Run `git status` and make sure only files from this task are included.
 - Never commit `.env`, `dist/`, `uploads/`, or `.claude/settings.local.json`.
-- No need to run build or lint.
+- For backend code changes, run the Validation checks from `CLAUDE.md` first (`tsc --noEmit` for api + batch, then `npm run build`). Do not run `npm run lint` unless the user allows file rewriting.

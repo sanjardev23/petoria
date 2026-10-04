@@ -4,7 +4,7 @@
 > **Nothing in the frontend has been changed yet.** This is a plan based on reading the code in the previous session.
 > Stack: Next.js 14 (Pages Router), React 18, Apollo Client 3, MUI 5, `next-i18next` (locales `en`, `kr`, `ru`), SCSS.
 
-The domain names below (**Product**, **Seller**) follow the 🟡 **proposed** backend design ([DECISIONS.md](DECISIONS.md) P1/P2). Confirm them before steps F1–F6.
+> Updated **2026-10-05** to match the backend `CLAUDE.md` Domain Rules: **Product** replaces Property (`ProductType` `PET, FOOD, TOY, ACCESSORY` + species + gender), and **Agent stays** (no Seller). See [DECISIONS.md](DECISIONS.md) P1 (accepted), P2 (rejected). Other details (status, location, options) are still 🟡 proposed.
 
 ---
 
@@ -15,7 +15,7 @@ The domain names below (**Product**, **Seller**) follow the 🟡 **proposed** ba
 | **F0** | **Rename layer only**: `package.json` name, `<title>`/meta, footer, join page, placeholder texts, `_document.tsx` SEO text | **No**, can be done now | `feat: develop petoria naming for client` |
 | F1 | Enums + types + config (`libs/enums`, `libs/types/property → product`, `libs/config.ts`) | Yes (final GraphQL names) | `feat: develop product types for client` |
 | F2 | Apollo operations (`apollo/user/*`, `apollo/admin/*`), see §4 | Yes | (together with F1/F3) |
-| F3 | Pages + routes (`pages/property → product`, `agent → seller`, `_admin/properties → products`) and every link/`router.push` | Yes | `feat: develop product pages` |
+| F3 | Pages + routes (`pages/property → product`, `_admin/properties → products`) and every link/`router.push`. `pages/agent` stays | Yes | `feat: develop product pages` |
 | F4 | Components (rename files, props, variables, filter UI fields) | Yes | (together with F3) |
 | F5 | i18n texts in `public/locales/{en,kr,ru}/common.json` | No (text only) | `fix: modify petoria ui texts` |
 | F6 | SCSS file and class renames (`scss/pc/property`, `agent`, `mypage/addNewProperty`, …), optional | No | `fix: modify petoria style names` |
@@ -40,30 +40,30 @@ The domain names below (**Product**, **Seller**) follow the 🟡 **proposed** ba
 |---|---|---|
 | `/property` → `pages/property/index.tsx` | `/product` → `pages/product/index.tsx` | List + `Filter` |
 | `/property/detail?id=` → `pages/property/detail.tsx` | `/product/detail?id=` → `pages/product/detail.tsx` | Detail, comments (`commentGroup: PRODUCT`), like |
-| `/agent` → `pages/agent/index.tsx` | `/seller` → `pages/seller/index.tsx` | Uses `getSellers` |
-| `/agent/detail` → `pages/agent/detail.tsx` | `/seller/detail` → `pages/seller/detail.tsx` | Seller products + reviews |
+| `/agent` → `pages/agent/index.tsx` | unchanged | Still uses `getAgents` |
+| `/agent/detail` → `pages/agent/detail.tsx` | unchanged route | Shows agent **products** (`getAgentProducts`) + reviews |
 | `/_admin/properties` → `pages/_admin/properties/index.tsx` | `/_admin/products` → `pages/_admin/products/index.tsx` | Also the menu entry in `admin/AdminMenuList.tsx` |
 | `/mypage?category=myProperties` | `?category=myProducts` | Tab key in `MyMenu.tsx` + `pages/mypage/index.tsx` |
 | `/mypage?category=addProperty` | `?category=addProduct` | Same |
 | `/member` tab `case 'properties'` | `case 'products'` | `MemberMenu.tsx` + `pages/member/index.tsx` |
 | `/`, `/about`, `/account/join`, `/community/*`, `/cs`, `/member`, `/mypage`, `/_admin/{index,users,community,cs/*}` | unchanged routes | Only texts and child components change |
 
-Link sources to update (found with grep): 3× `href='/property…'`, 2× `href={`/property/detail?id=…`}`, 6× `pathname: '/property/detail'`, 2× `href='/agent…'`, 2× `pathname: '/agent/detail'`. Also `Top.tsx` / `Footer.tsx` navigation.
+Link sources to update (found with grep): 3× `href='/property…'`, 2× `href={`/property/detail?id=…`}`, 6× `pathname: '/property/detail'`. Also `Top.tsx` / `Footer.tsx` navigation. `/agent` links stay.
 
 ## 3. Component mapping
 
 | Old component | New component |
 |---|---|
-| `property/Filter.tsx` | `product/Filter.tsx`: replace rooms/beds/square/year filters with category / pet type / price / options |
+| `property/Filter.tsx` | `product/Filter.tsx`: replace rooms/beds/square/year filters with product type / species / gender / price / options |
 | `property/PropertyCard.tsx` | `product/ProductCard.tsx` |
 | `property/Review.tsx` | `product/Review.tsx` |
 | `common/PropertyBigCard.tsx` | `common/ProductBigCard.tsx` |
-| `common/AgentCard.tsx` | `common/SellerCard.tsx` |
-| `agent/ReviewCard.tsx` | `seller/ReviewCard.tsx` |
+| `common/AgentCard.tsx` | unchanged |
+| `agent/ReviewCard.tsx` | unchanged |
 | `homepage/TopProperties.tsx`, `TopPropertyCard.tsx` | `homepage/TopProducts.tsx`, `TopProductCard.tsx` |
 | `homepage/PopularProperties.tsx`, `PopularPropertyCard.tsx` | `homepage/PopularProducts.tsx`, `PopularProductCard.tsx` |
 | `homepage/TrendProperties.tsx`, `TrendPropertyCard.tsx` | `homepage/TrendProducts.tsx`, `TrendProductCard.tsx` |
-| `homepage/TopAgents.tsx`, `TopAgentCard.tsx` | `homepage/TopSellers.tsx`, `TopSellerCard.tsx` |
+| `homepage/TopAgents.tsx`, `TopAgentCard.tsx` | unchanged |
 | `homepage/HeaderFilter.tsx` | same file; new filter fields |
 | `mypage/AddNewProperty.tsx` | `mypage/AddNewProduct.tsx`: form fields per the new `ProductInput` |
 | `mypage/MyProperties.tsx`, `mypage/PropertyCard.tsx` | `mypage/MyProducts.tsx`, `mypage/ProductCard.tsx` |
@@ -72,7 +72,7 @@ Link sources to update (found with grep): 3× `href='/property…'`, 2× `href={
 | `admin/properties/PropertyList.tsx` | `admin/products/ProductList.tsx` |
 | `libs/types/property/{property,property.input,property.update}.ts` | `libs/types/product/{product,product.input,product.update}.ts` |
 | `libs/enums/property.enum.ts` | `libs/enums/product.enum.ts` |
-| `libs/enums/member.enum.ts` | `AGENT` → `SELLER` |
+| `libs/enums/member.enum.ts` | unchanged (`USER`, `AGENT`, `ADMIN`) |
 | `libs/enums/{like,view,comment,notification}.enum.ts` | `PROPERTY` → `PRODUCT` |
 | `libs/config.ts` | `availableOptions` → `['productOnSale','productFreeDelivery']`; remove `propertyYears`, `propertySquare`; `topPropertyRank` → `topProductRank` |
 
@@ -86,8 +86,8 @@ The file locations stay the same (`apollo/user/query.ts`, `apollo/user/mutation.
 |---|---|---|---|---|---|
 | user/query | `GET_PROPERTY` / `getProperty` | `$input: String!` → `propertyId` | `GET_PRODUCT` / `getProduct` | `productId` | `Product` |
 | user/query | `GET_PROPERTIES` / `getProperties` | `PropertiesInquiry!` | `GET_PRODUCTS` / `getProducts` | `ProductsInquiry!` | `Products` |
-| user/query | `GET_AGENT_PROPERTIES` / `getAgentProperties` | `AgentPropertiesInquiry!` | `GET_SELLER_PRODUCTS` / `getSellerProducts` | `SellerProductsInquiry!` | `Products` |
-| user/query | `GET_AGENTS` / `getAgents` | `AgentsInquiry!` | `GET_SELLERS` / `getSellers` | `SellersInquiry!` | `Members` |
+| user/query | `GET_AGENT_PROPERTIES` / `getAgentProperties` | `AgentPropertiesInquiry!` | `GET_AGENT_PRODUCTS` / `getAgentProducts` | `AgentProductsInquiry!` | `Products` |
+| user/query | `GET_AGENTS` / `getAgents` | `AgentsInquiry!` | unchanged | `AgentsInquiry!` | `Members` (selection set: `memberProducts`) |
 | user/query | `GET_FAVORITES` / `getFavorites` | `OrdinaryInquiry!` | unchanged name | `OrdinaryInquiry!` | `Products` (selection set changes) |
 | user/query | `GET_VISITED` / `getVisited` | `OrdinaryInquiry!` | unchanged name | `OrdinaryInquiry!` | `Products` (selection set changes) |
 | user/mutation | `CREATE_PROPERTY` / `createProperty` | `PropertyInput!` | `CREATE_PRODUCT` / `createProduct` | `ProductInput!` | `Product` |
@@ -106,14 +106,15 @@ Unchanged operations: `GET_MEMBER`, `GET_BOARD_ARTICLE(S)`, `GET_COMMENTS`, `GET
 |---|---|---|
 | Nestar | Petoria | titles, footer, join page, SEO |
 | Property / Properties | Product / Products | nav, headings, cards, admin |
-| Agent / Agents | Seller / Sellers | nav, seller pages, homepage "Top Agents" |
-| Property type (Apartment / Villa / House) | Category (Food, Treat, Toy, Accessory, Clothing, Health, Grooming, Housing) | filter, add form |
-| (none) | Pet type (Dog, Cat, Bird, Fish, Small animal, Reptile) | filter, add form, card badge |
+| Agent / Agents | unchanged | nav, agent pages, homepage "Top Agents" |
+| Property type (Apartment / Villa / House) | Product type (Pet, Food, Toy, Accessory) | filter, add form |
+| (none) | Species (Dog, Cat, Bird, Fish) | filter, add form, card badge |
+| (none) | Gender (Male, Female), for pets | filter, add form, detail page |
 | Rooms, Beds, Square, Year built | removed → Brand, Stock | filter, add form, detail page |
 | Barter / Rent | On sale / Free delivery | filter options, card badges |
 | Sold | Sold out | status labels, mypage |
 | Address | removed (city/location kept) | add form, detail |
-| "Property Search", "Agent Page", "Property type" (locale keys) | "Product Search", "Seller Page", "Category" | `public/locales/{en,kr,ru}/common.json`. Update **all three** locales |
+| "Property Search", "Property type" (locale keys) | "Product Search", "Product type" ("Agent Page" stays) | `public/locales/{en,kr,ru}/common.json`. Update **all three** locales |
 | "Buy and sell properties anywhere anytime in South Korea" | pet-shop description (owner to approve) | `pages/_document.tsx` |
 
 ## 6. Risks

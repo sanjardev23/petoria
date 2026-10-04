@@ -1,23 +1,25 @@
 # Architectural Decisions: Nestar → Petoria
 
-> Status as of **2026-10-03**. Each decision lists its status, the reason, risks, and the alternatives.
-> **Accepted** = approved by the project owner and applied. **Proposed** = suggested by the previous AI session but **not confirmed yet**.
+> Status as of **2026-10-05**. Each decision lists its status, the reason, risks, and the alternatives.
+> **Accepted** = approved by the project owner. **Rejected** = the owner chose something else. **Proposed** = suggested by an earlier AI session but **not confirmed yet**.
+> The rules in `CLAUDE.md` (Domain Rules, Workflow, Validation) win over this file.
 
 ## Summary
 
 | ID | Decision | Status |
 |---|---|---|
-| D1 | Migrate in phases: rename layer → role layer → domain layer → frontend | Accepted |
+| D1 | Migrate in phases: rename layer → domain layer → frontend (the role layer was dropped, see P2) | Accepted |
 | D2 | The rename layer does not change the GraphQL API, MongoDB, or business logic | Accepted |
 | D3 | Move folders with `git mv` | Accepted |
 | D4 | Rename `nestar-batch.controller.ts` → `batch.controller.ts` | Accepted |
-| D5 | Validate with report-only ESLint + `tsc --noEmit`, compared against a baseline | Accepted |
+| D5 | Validate with `tsc --noEmit` (api + batch) + `npm run build`; lint only when rewriting files is OK | Accepted (updated 2026-10-05) |
 | D6 | Never read or edit `.env`; keep the DB name inside the Mongo URI | Accepted |
 | D7 | One commit per task on `modification`; user is the only author; no PRs | Accepted |
 | D8 | Do not fix old lint/test problems inside a rename commit | Accepted |
 | D9 | Do not kill processes the session did not start | Accepted |
-| P1 | **Product** (pet products) becomes the main entity | Proposed |
-| P2 | `MemberType.AGENT` → `SELLER` | Proposed |
+| D10 | AI handoff docs live in `docs/ai/`; project rules and skills live in `CLAUDE.md` and `.claude/skills/` | Accepted (2026-10-05) |
+| P1 | **Product** becomes the main entity, with `ProductType` `PET, FOOD, TOY, ACCESSORY` + `productSpecies` + `productGender` | **Accepted** (2026-10-05) |
+| P2 | `MemberType.AGENT` → `SELLER` | **Rejected** (2026-10-05): `AGENT` stays |
 | P3 | Replace the property module in place; new `products` collection; keep old data | Proposed |
 | P4 | Keep the location enum (renamed `ProductLocation`) | Proposed |
 | P5 | Orders / cart / payment are out of scope for now | Proposed |
@@ -48,11 +50,16 @@
 - **Risks:** None. Only one import (`batch.module.ts`) referenced it.
 - **Alternatives:** `petoria-batch.controller.ts` (keeps the app name inside a file name, which is the same problem as before).
 
-### D5: Report-only lint + `tsc --noEmit`, baseline vs after
-- **Why:** The user asked for lint and typecheck. `npm run lint` uses `eslint --fix`, which would re-format unrelated files (for example the space-indented `test/app.e2e-spec.ts`) and pollute the rename commit. Running the checks **before** and **after** shows that problems are old, not new.
-- **Commands:** `npx eslint "{src,apps,libs,test}/**/*.ts"` · `npx tsc --noEmit --incremental false -p apps/petoria-api/tsconfig.app.json` (and the same for `petoria-batch`).
-- **Risks:** `tsc` per app config skips `test/` (excluded in `tsconfig.app.json`), so spec files are covered only by ESLint.
-- **Alternatives:** `nest build` (writes `dist/`, slower); `npm run lint` (changes files).
+### D5: Validation commands (updated 2026-10-05)
+- **Now (from `CLAUDE.md` Validation):** after backend work run
+  `npx tsc -p apps/petoria-api/tsconfig.app.json --noEmit` · `npx tsc -p apps/petoria-batch/tsconfig.app.json --noEmit` · `npm run build`.
+- **Lint:** `npm run lint` uses `eslint --fix`, which re-formats files (for example the space-indented `test/app.e2e-spec.ts`). Use it only when file rewriting is OK. A report-only run (`npx eslint "{src,apps,libs,test}/**/*.ts"`) is still fine for comparing against the baseline.
+- **Risks:** `tsc` per app config skips `test/` (excluded in `tsconfig.app.json`), so spec files are covered only by ESLint. `npm run build` writes `dist/`.
+- **History:** on 2026-10-03 the checks were report-only ESLint + `tsc --noEmit`, compared before and after the rename.
+
+### D10: Where AI docs and rules live
+- **Why:** The handoff docs moved from `docs/` to `docs/ai/` (commit `65c2d74`). Rules that Claude must always follow are in `CLAUDE.md`, which loads automatically every session. Repeatable workflows are skills in `.claude/skills/<name>/SKILL.md` (`backend-migration`, `product-logic`, `commit`).
+- **Risks:** The docs and `CLAUDE.md` can drift apart. `CLAUDE.md` wins when they disagree.
 
 ### D6: No `.env` access; keep the Mongo DB name
 - **Why:** Project rule. Env keys contain no project name, so nothing needs to change. Renaming the DB inside the URI would point the app at a new, empty database.
@@ -76,17 +83,19 @@
 
 ---
 
+## Decided by the owner (2026-10-05, in `CLAUDE.md` Domain Rules)
+
+### P1: Product as the main entity: Accepted
+- **Decision:** One `Product` entity. Pets are products too: `ProductType` = `PET`, `FOOD`, `TOY`, `ACCESSORY`. Extra fields: `productSpecies` (`DOG`, `CAT`, `BIRD`, `FISH`) and `productGender` (`MALE`, `FEMALE`). Do not bring back property or real-estate fields.
+- **Why:** The property shape (title, price, images, desc, status, location, likes/views/comments/rank, owner) maps almost 1-to-1 to a product. One module covers both pets and pet goods.
+- **Risks:** `productGender` has no meaning for food/toys. Its nullability must be decided when the schema is written.
+- **Replaced idea:** The earlier proposal (`productCategory` with 8 values + `productPetType`) is dropped.
+
+### P2: AGENT → SELLER: Rejected
+- **Decision:** `MemberType.USER`, `AGENT`, `ADMIN` stay unchanged. Products are owned by `AGENT` members, unless a later migration explicitly changes it.
+- **Effect:** No role layer. `getAgents`, `AgentsInquiry`, `availableAgentSorts`, `batchTopAgents` keep their names. Agent-related product names use "Agent" (e.g. `getAgentProducts`). No data migration for `memberType`.
+
 ## Proposed (needs confirmation before implementation)
-
-### P1: Product as the main entity
-- **Why:** A "pet shop" sells products. The property shape (title, price, images, desc, status, location, likes/views/comments/rank, owner) maps almost 1-to-1 to a product. Only the real-estate fields (beds, rooms, square, address, constructedAt, barter/rent) need replacing.
-- **Risks:** If the business actually wants **pet listings** (sale/adoption with species, breed, age, gender), the schema is wrong.
-- **Alternatives:** A `Pet` entity (closest to the listing UX); both `Pet` and `Product` modules (about twice the work).
-
-### P2: AGENT → SELLER
-- **Why:** "Agent" is real-estate language. "Seller" describes who creates products. It touches only the enum, the role guards, `getAgents`, and the batch ranking.
-- **Risks:** Existing dev members with `memberType: 'AGENT'` stop matching the enum (data migration or reseed needed). The frontend `MemberType` enum must change at the same time.
-- **Alternatives:** `SHOP`; keep `AGENT`.
 
 ### P3: Replace in place + new `products` collection
 - **Why:** It avoids two parallel modules. A fresh collection avoids mixing old real-estate documents with new product documents. The old `properties` data stays untouched as a fallback.
@@ -109,6 +118,6 @@
 - **Alternatives:** Keep it in `product.input.ts`.
 
 ### P7: Frontend after the backend, as a separate task
-- **Why:** The frontend depends on the final GraphQL names. Each repo gets its own commits. The frontend **rename layer** (titles, footer, `package.json` name) does not depend on the backend and can be done first.
+- **Why:** The frontend depends on the final GraphQL names. Each repo gets its own commits. The frontend **rename layer** (titles, footer, `package.json` name) does not depend on the backend and can be done first. Agent pages and names stay (P2 rejected).
 - **Risks:** Between the backend domain commit and the frontend update, the frontend is broken against the dev API.
 - **Alternatives:** Develop both in lockstep on the same day; or keep old GraphQL names for a short time.

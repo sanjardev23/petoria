@@ -1,16 +1,19 @@
 # Completed Tasks: Nestar → Petoria Migration
 
-> Session date: **2026-10-03** · backend repo `petoria` · branch `modification`
+> Sessions: **2026-10-03**, **2026-10-05** · backend repo `petoria` · branch `modification`
 
 ## 1. Task log
 
 | # | Task | Result | Commit |
 |---|---|---|---|
 | 1 | Analysed the monorepo structure (apps, modules, schemas, batch, config) and the sibling frontend `petoria-next` | Full inventory of real-estate code and every `nestar` reference | — |
-| 2 | Drafted a full domain migration plan (Property → Product, AGENT → SELLER) | Plan written. The owner did **not** confirm the domain choices, so they stay **Proposed** ([DECISIONS.md](DECISIONS.md)) | — |
+| 2 | Drafted a full domain migration plan (Property → Product, AGENT → SELLER) | Plan written. The owner did not confirm the domain choices that day. On 2026-10-05: Product accepted (with new enum values), SELLER rejected ([DECISIONS.md](DECISIONS.md)) | — |
 | 3 | Planned and implemented the **safe rename layer** (names only, no logic/API/DB change) | Done | `f9c138e fix: Modify project name into petoria` (committed by the owner) |
 | 4 | Validated the rename (lint, typecheck, both apps running) | Passed. No new problems (see §3) | — |
-| 5 | Wrote the migration documentation (`docs/*.md`) | This folder | pending |
+| 5 | Wrote the migration documentation (`docs/*.md`) | This folder | `095708b feat: create agentic docs and history` |
+| 6 | Moved the docs to `docs/ai/` | Same files, new place | `65c2d74 fix: modify docs content` |
+| 7 | 2026-10-05: Added owner rules to `CLAUDE.md` (Read First, Project Shape, Domain Rules, Workflow, Validation); added the skills `backend-migration` and `product-logic` (`.claude/skills/`) and `SKILLS.MD` | Domain decided: Product with `ProductType` `PET/FOOD/TOY/ACCESSORY`, `productSpecies`, `productGender`; `AGENT` stays | pending |
+| 8 | 2026-10-05: Updated `docs/ai/*` to match `CLAUDE.md` (P1 accepted, P2 rejected, new validation commands, `docs/ai/` paths, port 3008 free) | This folder | pending |
 
 ## 2. Files and modules changed in the rename layer (`f9c138e`)
 
@@ -35,6 +38,8 @@
 
 ## 3. Validation status
 
+> These checks were run on 2026-10-03, before the validation rule changed. From now on use the commands in `CLAUDE.md` → Validation (`tsc --noEmit` for api + batch, then `npm run build`).
+
 | Check | Command | Before rename | After rename | Status |
 |---|---|---|---|---|
 | Typecheck API | `npx tsc --noEmit --incremental false -p apps/petoria-api/tsconfig.app.json` | 0 errors | 0 errors | ✅ |
@@ -58,4 +63,4 @@ Old lint problems (the same before and after):
 | I3 | 14 prettier errors in the API e2e spec | `apps/petoria-api/test/app.e2e-spec.ts` | Style |
 | I4 | `lookupMember` aggregations load the `memberPassword` hash (`$lookup` ignores `select: false`). It is **not exposed**, because `memberPassword` has no `@Field` in `libs/dto/member/member.ts` | `libs/config.ts` `lookupMember` + its users in property/board-article/comment services | Low (defence in depth) |
 | I5 | `Notice` and `Notification` schemas have no module/resolver. `Notification.propertyId` refs `'Property'` | `apps/petoria-api/src/schemas/` | Info |
-| I6 | Stale process on port 3008 (PID 92147, `node dist/apps/nestar-api/main`, started 2026-10-02) | local machine | Env |
+| I6 | ✅ Resolved. Stale process on port 3008 (PID 92147) on 2026-10-03. On 2026-10-05 the port was free | local machine | Env |

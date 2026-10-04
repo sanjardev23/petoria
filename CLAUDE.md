@@ -55,7 +55,7 @@ NestJS monorepo with two apps:
   - `src/schemas/` — Mongoose models
   - `src/libs/` — config, dto, enums, types, interceptor
   - `src/socket/` — WebSocket chat gateway
-- `apps/petoria-batch` — scheduled batch jobs (batchRollback, batchProperties, batchAgents)
+- `apps/petoria-batch` — scheduled batch jobs (batchRollback, batchTopProperties, batchTopAgents)
 
 Env variables are in `.env` (PORT_API, PORT_BATCH, MONGO_DEV, MONGO_PROD, SECRET_TOKEN). **Never read out, change, or commit `.env` without asking.**
 
@@ -111,4 +111,6 @@ npm run build
 Skills live in `.claude/skills/<name>/SKILL.md`:
 
 - `commit` — how to commit and push in this project
+- `backend-migration` — continue the Nestar to Petoria backend modification while preserving the current NestJS architecture
+- `product-logic` — review product GraphQL, DTO, schema, enum, filter and naming consistency
 - `frontend-design`, `design-taste-frontend` — design guides (installed; tracked in `skills-lock.json`)
