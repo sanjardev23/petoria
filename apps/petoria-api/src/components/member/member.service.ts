@@ -27,6 +27,9 @@ export class MemberService {
 	) {}
 
 	public async signup(input: MemberInput): Promise<Member> {
+		// ADMIN accounts cannot be created via public signup
+		if (input.memberType === MemberType.ADMIN) throw new BadRequestException(Message.NOT_ALLOWED_REQUEST);
+
 		input.memberPassword = await this.authService.hashPassword(input.memberPassword);
 		try {
 			const result = await this.memberModel.create(input);
@@ -62,6 +65,10 @@ export class MemberService {
 	}
 
 	public async updateMember(memberId: ObjectId, input: MemberUpdate): Promise<Member> {
+		// Role and status can be changed only by ADMIN (updateMemberByAdmin)
+		if (input.memberType || input.memberStatus) throw new BadRequestException(Message.NOT_ALLOWED_REQUEST);
+		if (input.memberPassword) input.memberPassword = await this.authService.hashPassword(input.memberPassword);
+
 		const result: Member | null = await this.memberModel
 			.findOneAndUpdate(
 				{
@@ -191,6 +198,8 @@ export class MemberService {
 	}
 
 	public async updateMemberByAdmin(input: MemberUpdate): Promise<Member> {
+		if (input.memberPassword) input.memberPassword = await this.authService.hashPassword(input.memberPassword);
+
 		const result: Member | null = await this.memberModel
 			.findOneAndUpdate({ _id: input._id }, input, { new: true })
 			.exec();
