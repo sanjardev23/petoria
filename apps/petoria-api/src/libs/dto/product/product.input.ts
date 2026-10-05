@@ -29,6 +29,7 @@ export class ProductInput {
 	productTitle!: string;
 
 	@IsNotEmpty()
+	@Min(0)
 	@Field(() => Number)
 	productPrice!: number;
 

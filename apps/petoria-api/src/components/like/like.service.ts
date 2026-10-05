@@ -5,7 +5,7 @@ import { Like, MeLiked } from '../../libs/dto/like/like';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { T } from '../../libs/types/common';
 import { Message } from '../../libs/enums/common.enum';
-import { lookupFavorite } from '../../libs/config';
+import { lookupAuthMemberLiked, lookupFavorite } from '../../libs/config';
 import { LikeGroup } from '../../libs/enums/like.enum';
 import { OrdinaryInquiry } from '../../libs/dto/common.input';
 import { Product, Products } from '../../libs/dto/product/product';
@@ -65,6 +65,8 @@ export class LikeService {
 							{ $limit: limit },
 							lookupFavorite,
 							{ $unwind: '$favoriteProduct.memberData' },
+							// meLiked
+							lookupAuthMemberLiked(memberId, '$favoriteProduct._id'),
 						],
 						metaCounter: [{ $count: 'total' }],
 					},
@@ -73,7 +75,10 @@ export class LikeService {
 			.exec();
 
 		const result: Products = { list: [], metaCounter: data[0].metaCounter };
-		result.list = data[0].list.map((ele: { favoriteProduct: Product }) => ele.favoriteProduct);
+		result.list = data[0].list.map((ele: { favoriteProduct: Product; meLiked: MeLiked[] }) => ({
+			...ele.favoriteProduct,
+			meLiked: ele.meLiked,
+		}));
 
 		return result;
 	}

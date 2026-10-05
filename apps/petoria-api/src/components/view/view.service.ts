@@ -7,7 +7,8 @@ import { T } from '../../libs/types/common';
 import { OrdinaryInquiry } from '../../libs/dto/common.input';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { Product, Products } from '../../libs/dto/product/product';
-import { lookupVisit } from '../../libs/config';
+import { MeLiked } from '../../libs/dto/like/like';
+import { lookupAuthMemberLiked, lookupVisit } from '../../libs/config';
 
 @Injectable()
 export class ViewService {
@@ -51,6 +52,8 @@ export class ViewService {
 							{ $limit: limit },
 							lookupVisit,
 							{ $unwind: '$visitedProduct.memberData' },
+							// meLiked
+							lookupAuthMemberLiked(memberId, '$visitedProduct._id'),
 						],
 						metaCounter: [{ $count: 'total' }],
 					},
@@ -59,7 +62,10 @@ export class ViewService {
 			.exec();
 
 		const result: Products = { list: [], metaCounter: data[0].metaCounter };
-		result.list = data[0].list.map((ele: { visitedProduct: Product }) => ele.visitedProduct);
+		result.list = data[0].list.map((ele: { visitedProduct: Product; meLiked: MeLiked[] }) => ({
+			...ele.visitedProduct,
+			meLiked: ele.meLiked,
+		}));
 
 		return result;
 	}

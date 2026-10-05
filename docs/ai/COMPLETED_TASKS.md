@@ -16,6 +16,8 @@
 | 8 | 2026-10-05: Updated `docs/ai/*` to match `CLAUDE.md` (P1 accepted, P2 rejected, new validation commands, `docs/ai/` paths, port 3008 free) | This folder | `172bcdc` |
 | 9 | 2026-10-05: ER model for Petoria (`docs/ai/ER_MODEL.md` + shareable diagram page); owner confirmed product details, P3, P4 | Docs only | `9ac47a9` |
 | 10 | 2026-10-05: **Domain layer**: property → product in API and batch; fixed I1; dropped the empty `properties` collection from the dev DB | See §5 | `feat: transform properties into product business logic` |
+| 11 | 2026-10-05: Tested all member GraphQL APIs live (signup, login, checkAuth, checkAuthRoles, updateMember, getMember, getAgents, likeTargetMember, getAllMembersByAdmin, updateMemberByAdmin). Fixed 3 security bugs in `member.service.ts`: signup as `ADMIN` is refused; `updateMember` refuses `memberType`/`memberStatus` (admin only); new passwords are hashed in `updateMember` and `updateMemberByAdmin`. Added `member.service.spec.ts` (7 tests) | ✅ tests and tsc pass; fixes checked on the live API. Test members `aziza` (USER) and `bobur` (AGENT) stay in the dev DB | — |
+| 12 | 2026-10-07: Tested all 11 product GraphQL APIs live (create, get, update, list with filters, agent list, like, favorites, visited, and the 3 admin APIs with admin `Simon`). Fixed: `productPrice` must be ≥ 0 (`@Min(0)` in `ProductInput` and `ProductUpdate`); `getFavorites` and `getVisited` now return `meLiked` (`like.service.ts`, `view.service.ts`) | ✅ tsc passes; fixes checked on the live API. Test data: agent `jasur`, 3 products of `bobur` (the 4th was removed by the admin test) | — |
 
 ## 2. Files and modules changed in the rename layer (`f9c138e`)
 
