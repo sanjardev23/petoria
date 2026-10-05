@@ -6,14 +6,14 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BatchController } from './batch.controller';
 import MemberSchema from '../../petoria-api/src/schemas/Member.model';
-import PropertySchema from '../../petoria-api/src/schemas/Property.model';
+import ProductSchema from '../../petoria-api/src/schemas/Product.model';
 
 @Module({
 	imports: [
 		ConfigModule.forRoot(),
 		DatabaseModule,
 		ScheduleModule.forRoot(),
-		MongooseModule.forFeature([{ name: 'Property', schema: PropertySchema }]),
+		MongooseModule.forFeature([{ name: 'Product', schema: ProductSchema }]),
 		MongooseModule.forFeature([{ name: 'Member', schema: MemberSchema }]),
 	],
 	controllers: [BatchController],

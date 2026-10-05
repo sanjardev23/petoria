@@ -51,11 +51,11 @@ Use those files as the source of truth for AI Agent related migration history, a
 NestJS monorepo with two apps:
 
 - `apps/petoria-api` — GraphQL API (Apollo) + MongoDB (Mongoose) + JWT auth + WebSocket chat
-  - `src/components/` — feature modules: auth, member, property, board-article, comment, follow, like, view
+  - `src/components/` — feature modules: auth, member, product, board-article, comment, follow, like, view
   - `src/schemas/` — Mongoose models
   - `src/libs/` — config, dto, enums, types, interceptor
   - `src/socket/` — WebSocket chat gateway
-- `apps/petoria-batch` — scheduled batch jobs (batchRollback, batchTopProperties, batchTopAgents)
+- `apps/petoria-batch` — scheduled batch jobs (batchRollback, batchTopProducts, batchTopAgents)
 
 Env variables are in `.env` (PORT_API, PORT_BATCH, MONGO_DEV, MONGO_PROD, SECRET_TOKEN). **Never read out, change, or commit `.env` without asking.**
 
@@ -64,7 +64,8 @@ Env variables are in `.env` (PORT_API, PORT_BATCH, MONGO_DEV, MONGO_PROD, SECRET
 We are **migrating this project from `nestar` to `petoria`**.
 
 - **Done:** project/app names (folders `apps/petoria-api`, `apps/petoria-batch`, `package.json` name and scripts, `nest-cli.json`, `tsconfig.app.json`, welcome texts, tests).
-- **Still old:** the real-estate domain (property) — the next step is changing it into a pet-shop **product** domain. `MemberType.AGENT` stays (see Domain Rules).
+- **Done:** the real-estate domain (property) is replaced by the pet-shop **product** domain (module, schema, DTOs, enums, batch). The `properties` collection was dropped from the dev DB. `MemberType.AGENT` stays (see Domain Rules). Target schema: `docs/ai/ER_MODEL.md`.
+- **Still old:** the frontend (`../petoria-next`) still uses the property GraphQL names and must be migrated next.
 
 Rules for the migration:
 

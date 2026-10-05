@@ -23,7 +23,7 @@
 | P3 | Replace the property module in place; new `products` collection; drop the old `properties` collection (dev DB) after the product code works | **Accepted** (2026-10-05) |
 | P4 | Keep the location enum (renamed `ProductLocation`) | **Accepted** (2026-10-05) |
 | P5 | Orders / cart / payment are out of scope for now | Proposed |
-| P6 | Move `OrdinaryInquiry` to a common DTO file | Proposed |
+| P6 | Move `OrdinaryInquiry` to a common DTO file | **Accepted** (2026-10-05, part of the approved plan; done) |
 | P7 | Migrate the frontend after the backend, as a separate task in `petoria-next` | Proposed |
 
 ---
@@ -119,7 +119,7 @@
 - **Risks:** `productStock` has no consumer until orders exist.
 - **Alternatives:** Design `Order`/`Cart` modules together with Product.
 
-### P6: `OrdinaryInquiry` → `libs/dto/common.input.ts`
+### P6: `OrdinaryInquiry` → `libs/dto/common.input.ts`: Accepted and done (2026-10-05)
 - **Why:** It is generic paging (`page`, `limit`) used by like, view, and property/product. It should not live in a domain DTO file.
 - **Risks:** Import path updates only. The GraphQL type name stays the same.
 - **Alternatives:** Keep it in `product.input.ts`.

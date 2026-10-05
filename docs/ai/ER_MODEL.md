@@ -1,6 +1,6 @@
 # ER Model: Petoria (pet shop)
 
-> Status as of **2026-10-05** · branch `modification` · **target model** (after the property → product migration).
+> Status as of **2026-10-05** · branch `modification` · **implemented** in the backend (product module). The `properties` collection was dropped from the dev DB.
 > The **Domain Rules** in `CLAUDE.md` win over this file. Product details were confirmed by the owner on 2026-10-05. Items marked 🟡 are still open.
 
 The database is MongoDB, so there are no real foreign keys. A "FK" below is an `ObjectId` field that points to another collection. The code (services and `$lookup`) keeps the links correct, not the database.
@@ -169,7 +169,7 @@ erDiagram
 | Entity | Collection | Status |
 |---|---|---|
 | `MEMBER` | `members` | Exists. Only change: `memberProperties` → `memberProducts` |
-| `PRODUCT` | `products` | **New**. Replaces `properties`. The `properties` collection is removed (dropping its data needs a final OK before it is done) |
+| `PRODUCT` | `products` | **New**. Replaces `properties`, which was dropped from the dev DB on 2026-10-05 (it had 0 documents) |
 | `BOARD_ARTICLE` | `boardArticles` | Exists, no change |
 | `COMMENT` | `comments` | Exists. Group value `PROPERTY` → `PRODUCT` |
 | `LIKE` | `likes` | Exists. Group value `PROPERTY` → `PRODUCT` |

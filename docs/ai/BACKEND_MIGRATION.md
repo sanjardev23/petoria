@@ -1,6 +1,6 @@
 # Backend Migration: Nestar → Petoria
 
-> Status as of **2026-10-05** · branch `modification` · last migration commit `f9c138e fix: Modify project name into petoria`
+> Status as of **2026-10-05** · branch `modification` · rename layer `f9c138e` · **domain layer done** (product module, see §9 and [ER_MODEL.md](ER_MODEL.md))
 > The **Domain Rules** in `CLAUDE.md` win over anything in this file.
 
 Every item in this file is labelled with one of these statuses:
@@ -47,7 +47,7 @@ A **pet shop** platform. It keeps the same infrastructure: members, auth, commun
 
 1. ✅ **Rename layer:** every project/app identifier says Petoria, with **no change** to business logic, the GraphQL API, or MongoDB.
 2. ~~Role layer: `AGENT` → `SELLER`~~ **Cancelled.** `MemberType.AGENT` stays (CLAUDE.md Domain Rules).
-3. 🟢 **Domain layer:** the property module → a product module (new schema, DTOs, resolver, service, batch jobs). The details below that `CLAUDE.md` does not decide are still 🟡.
+3. ✅ **Domain layer:** the property module → a product module (new schema, DTOs, resolver, service, batch jobs). Done on 2026-10-05. §4–7 below are the original plan; §9 lists what was actually built where it differs.
 4. Keep the backend and frontend (`../petoria-next`) in sync whenever a GraphQL name changes.
 
 ## 4. Naming changes
@@ -169,3 +169,20 @@ Field mapping (Property → Product). 🟢 rows come from `CLAUDE.md`; the rest 
 | C6 | ✅ Resolved. A stale process (PID 92147) held **port 3008** on 2026-10-03. On 2026-10-05 the port was free | `npm run start:dev:batch` can use its default port again |
 | C7 | Both e2e specs expect `'Hello World!'` from `GET /`, but the apps return the welcome strings | The e2e tests fail. This was already broken before the rename and is not caused by it |
 | C8 | `.env` keys (`PORT_API`, `PORT_BATCH`, `MONGO_DEV`, `MONGO_PROD`, `SECRET_TOKEN`) contain no project name | No env change is needed for any phase |
+
+## 9. Domain layer result (2026-10-05)
+
+✅ Implemented. Differences from the plan in §4–7:
+
+| Item | Plan | Built |
+|---|---|---|
+| `productBrand`, `productStock`, `productOnSale`, `productFreeDelivery` | proposed | **Not added** (owner decision). `availableOptions` and the `options` filter are removed |
+| `constructedAt` | removed | Replaced by `productBirthDate` (optional, PET only) |
+| `productGender` | nullability open | Optional, PET only. `createProduct` rejects gender/birth date on non-PET (`Message.PET_ONLY_FIELDS`). `updateProduct` clears them when the type changes away from PET |
+| Nested search input names | rename (`ProductSearch`…) | **Kept** `PISearch`, `APISearch`, `ALPISearch`. They still fit (`Products Inquiry`) and the frontend never names them |
+| Search filters | — | `locationList`, `typeList`, `speciesList`, `genderList`, `pricesRange`, `periodsRange`, `text`. Rooms, beds, squares and options are removed |
+| `OrdinaryInquiry` | move (P6) | Moved to `libs/dto/common.input.ts` |
+| `properties` collection | keep (old P3) | Dropped from the dev DB. It had 0 documents, and no like/view/comment/notification used `PROPERTY` |
+
+Final GraphQL operations: `createProduct`, `getProduct(productId)`, `updateProduct`, `getFavorites`, `getVisited`, `getProducts`, `getAgentProducts`, `likeTargetProduct(productId)`, `getAllProductsByAdmin`, `updateProductByAdmin`, `removeProductByAdmin(productId)`. Types: `Product`, `Products`, `ProductInput`, `ProductUpdate`, `ProductsInquiry`, `AgentProductsInquiry`, `AllProductsInquiry`. Enums: `ProductType`, `ProductSpecies`, `ProductGender`, `ProductStatus`, `ProductLocation`.
+

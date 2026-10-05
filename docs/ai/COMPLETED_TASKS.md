@@ -12,8 +12,10 @@
 | 4 | Validated the rename (lint, typecheck, both apps running) | Passed. No new problems (see §3) | — |
 | 5 | Wrote the migration documentation (`docs/*.md`) | This folder | `095708b feat: create agentic docs and history` |
 | 6 | Moved the docs to `docs/ai/` | Same files, new place | `65c2d74 fix: modify docs content` |
-| 7 | 2026-10-05: Added owner rules to `CLAUDE.md` (Read First, Project Shape, Domain Rules, Workflow, Validation); added the skills `backend-migration` and `product-logic` (`.claude/skills/`) and `SKILLS.MD` | Domain decided: Product with `ProductType` `PET/FOOD/TOY/ACCESSORY`, `productSpecies`, `productGender`; `AGENT` stays | pending |
-| 8 | 2026-10-05: Updated `docs/ai/*` to match `CLAUDE.md` (P1 accepted, P2 rejected, new validation commands, `docs/ai/` paths, port 3008 free) | This folder | pending |
+| 7 | 2026-10-05: Added owner rules to `CLAUDE.md` (Read First, Project Shape, Domain Rules, Workflow, Validation); added the skills `backend-migration` and `product-logic` (`.claude/skills/`) and `SKILLS.MD` | Domain decided: Product with `ProductType` `PET/FOOD/TOY/ACCESSORY`, `productSpecies`, `productGender`; `AGENT` stays | `172bcdc` |
+| 8 | 2026-10-05: Updated `docs/ai/*` to match `CLAUDE.md` (P1 accepted, P2 rejected, new validation commands, `docs/ai/` paths, port 3008 free) | This folder | `172bcdc` |
+| 9 | 2026-10-05: ER model for Petoria (`docs/ai/ER_MODEL.md` + shareable diagram page); owner confirmed product details, P3, P4 | Docs only | `9ac47a9` |
+| 10 | 2026-10-05: **Domain layer**: property → product in API and batch; fixed I1; dropped the empty `properties` collection from the dev DB | See §5 | `feat: transform properties into product business logic` |
 
 ## 2. Files and modules changed in the rename layer (`f9c138e`)
 
@@ -58,9 +60,45 @@ Old lint problems (the same before and after):
 
 | # | Issue | Location | Severity |
 |---|---|---|---|
-| I1 | `getVisited()` returns **favorites**: it calls `likeService.getFavoriteProperties` instead of `viewService.getVisitedProperties` | `apps/petoria-api/src/components/property/property.service.ts` (`getVisited`) | Bug: medium |
+| I1 | ✅ Fixed in task 10. `getVisited()` returned **favorites**: it calls `likeService.getFavoriteProperties` instead of `viewService.getVisitedProperties` | `apps/petoria-api/src/components/property/property.service.ts` (`getVisited`) | Bug: medium |
 | I2 | Both e2e specs expect `'Hello World!'` from `GET /` | `apps/petoria-api/test/app.e2e-spec.ts`, `apps/petoria-batch/test/app.e2e-spec.ts` | Test debt |
 | I3 | 14 prettier errors in the API e2e spec | `apps/petoria-api/test/app.e2e-spec.ts` | Style |
 | I4 | `lookupMember` aggregations load the `memberPassword` hash (`$lookup` ignores `select: false`). It is **not exposed**, because `memberPassword` has no `@Field` in `libs/dto/member/member.ts` | `libs/config.ts` `lookupMember` + its users in property/board-article/comment services | Low (defence in depth) |
-| I5 | `Notice` and `Notification` schemas have no module/resolver. `Notification.propertyId` refs `'Property'` | `apps/petoria-api/src/schemas/` | Info |
+| I5 | `Notice` and `Notification` schemas have no module/resolver. (`Notification.propertyId` is now `productId` → `'Product'`) | `apps/petoria-api/src/schemas/` | Info |
 | I6 | ✅ Resolved. Stale process on port 3008 (PID 92147) on 2026-10-03. On 2026-10-05 the port was free | local machine | Env |
+
+## 5. Domain layer: property → product (task 10)
+
+### Files
+
+| Change | Files |
+|---|---|
+| `git mv` + rewrite | `components/property/*` → `components/product/{product.module,product.resolver,product.service}.ts`; `libs/dto/property/*` → `libs/dto/product/{product,product.input,product.update}.ts`; `libs/enums/property.enum.ts` → `product.enum.ts`; `schemas/Property.model.ts` → `Product.model.ts` |
+| New | `libs/dto/common.input.ts` (`OrdinaryInquiry`) |
+| Edit | `like.service.ts` (`getFavoriteProducts`), `view.service.ts` (`getVisitedProducts`), `comment.{module,service}.ts`, `components.module.ts`, `libs/config.ts` (`availableProductSorts`, `favoriteProduct`/`visitedProduct`), group enums (`PROPERTY` → `PRODUCT`), `common.enum.ts` (`PET_ONLY_FIELDS`), `Member.model.ts` + `member.ts` (`memberProducts`), `Notification.model.ts` (`productId`) |
+| Batch | `batch.{module,service,controller}.ts`, `lib/config.ts` (`BATCH_TOP_PRODUCTS`, `batchTopProducts`, agent rank uses `memberProducts`) |
+| Docs | `CLAUDE.md`, `docs/ai/*` |
+
+### Behaviour changes besides the renames
+
+- **I1 fixed:** `getVisited` now calls `viewService.getVisitedProducts`.
+- **Sold/deleted dates are saved now.** The old property code set `soldAt`/`deletedAt` in local variables only, so they were never written. `soldOutAt`/`deletedAt` are now part of the update.
+- **Pet-only fields:** gender and birth date are rejected on non-PET products. Changing a PET into another type clears them.
+- **Unique index** is now `{ memberId, productTitle }`.
+
+### Validation
+
+| Check | Result |
+|---|---|
+| `npx tsc -p apps/petoria-api/tsconfig.app.json --noEmit` | ✅ 0 errors |
+| `npx tsc -p apps/petoria-batch/tsconfig.app.json --noEmit` | ✅ 0 errors |
+| `npm run build` | ✅ compiled successfully |
+| ESLint report-only on the changed files | ✅ clean (Prettier run only on the 6 new product files) |
+| `grep -rniI propert apps --include=*.ts` | ✅ no matches |
+| API runtime (`npm run start:dev`, port 3007) | ✅ `ProductModule` loaded, MongoDB connected |
+| Batch runtime (`npm run start:dev:batch`) | ✅ "BATCH SERVER READY!" |
+| GraphQL scenario (Node script against the dev API) | ✅ 19/19: signup AGENT/USER, createProduct PET/DOG/MALE, FOOD with gender rejected, duplicate title rejected, USER cannot create, view counter, like, comment `PRODUCT`, favorites, visited (I1), type/species/gender/price filter, text search + price sort, agent list, gender on FOOD blocked, PET→TOY clears pet fields, SOLD_OUT sets `soldOutAt`, `memberProducts` = 1 |
+| Dev DB | `properties` had 0 documents → dropped. No `PROPERTY` group documents existed |
+
+Test data from the scenario (2 members, 2 products, 1 like, 3 views, 1 comment) was deleted from the dev DB afterwards. The dev API server was stopped.
+

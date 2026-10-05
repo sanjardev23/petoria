@@ -8,7 +8,7 @@
 
 | # | Task | Why |
 |---|---|---|
-| 0.1 | Confirm the remaining proposals P5–P7 in [DECISIONS.md](DECISIONS.md): orders deferred, `OrdinaryInquiry` move, frontend after backend. P3 and P4 were accepted on 2026-10-05 | The domain layer (1.1) uses P6 |
+| 0.1 | Confirm the remaining proposals P5 and P7 in [DECISIONS.md](DECISIONS.md): orders deferred, frontend after backend. P3, P4 and P6 were accepted on 2026-10-05 | P7 decides when the frontend work starts |
 | 0.2 | ✅ Done 2026-10-05. Product details decided, see [ER_MODEL.md](ER_MODEL.md) | — |
 
 P1 (Product) and P2 (keep `AGENT`) were decided on 2026-10-05. The old "role layer" (`AGENT` → `SELLER`) is **cancelled**.
@@ -17,12 +17,12 @@ P1 (Product) and P2 (keep `AGENT`) were decided on 2026-10-05. The old "role lay
 
 | # | Task | Files | Notes |
 |---|---|---|---|
-| 1.1 | Domain layer: product module (replaces property) | New `components/product/*`, `libs/dto/product/*`, `libs/enums/product.enum.ts` (`ProductType` `PET, FOOD, TOY, ACCESSORY`; `productSpecies` `DOG, CAT, BIRD, FISH`; `productGender` `MALE, FEMALE`), `schemas/Product.model.ts`. Update `like.service.ts`, `view.service.ts`, `comment.{module,service}.ts`, `components.module.ts`, Group enums, `Notification.model.ts`, `libs/config.ts`, `memberProperties` → `memberProducts`. Then delete the property files | Follow [BACKEND_MIGRATION.md §5–7](BACKEND_MIGRATION.md). Products are owned by `AGENT` members (`@Roles(MemberType.AGENT)` stays) |
-| 1.2 | Fix I1: `getVisited` must call the view service | `property.service.ts`, or `product.service.ts` if 1.1 is done first | `ViewService` is already injected. Call `getVisitedProperties`/`getVisitedProducts` |
-| 1.3 | Batch: product + agent ranking | `apps/petoria-batch/src/{batch.module,batch.service,batch.controller}.ts`, `lib/config.ts` | `BATCH_TOP_PROPERTIES` → `BATCH_TOP_PRODUCTS`. `BATCH_TOP_AGENTS` stays; its formula uses `memberProducts` |
+| 1.1 | ✅ Done 2026-10-05. Domain layer: product module (replaces property) | New `components/product/*`, `libs/dto/product/*`, `libs/enums/product.enum.ts` (`ProductType` `PET, FOOD, TOY, ACCESSORY`; `productSpecies` `DOG, CAT, BIRD, FISH`; `productGender` `MALE, FEMALE`), `schemas/Product.model.ts`. Update `like.service.ts`, `view.service.ts`, `comment.{module,service}.ts`, `components.module.ts`, Group enums, `Notification.model.ts`, `libs/config.ts`, `memberProperties` → `memberProducts`. Then delete the property files | Follow [BACKEND_MIGRATION.md §5–7](BACKEND_MIGRATION.md). Products are owned by `AGENT` members (`@Roles(MemberType.AGENT)` stays) |
+| 1.2 | ✅ Done 2026-10-05. Fix I1: `getVisited` must call the view service | `property.service.ts`, or `product.service.ts` if 1.1 is done first | `ViewService` is already injected. Call `getVisitedProperties`/`getVisitedProducts` |
+| 1.3 | ✅ Done 2026-10-05. Batch: product + agent ranking | `apps/petoria-batch/src/{batch.module,batch.service,batch.controller}.ts`, `lib/config.ts` | `BATCH_TOP_PROPERTIES` → `BATCH_TOP_PRODUCTS`. `BATCH_TOP_AGENTS` stays; its formula uses `memberProducts` |
 | 1.4 | I4: add `$project: { 'memberData.memberPassword': 0 }` after `lookupMember` | `libs/config.ts` or each aggregation | Defence in depth, no API change |
 | 1.5 | Optional: move shared code (schemas, DTOs, enums) to a Nest `libs/` library so batch does not import `../../petoria-api/src` | `nest-cli.json`, `tsconfig.json` paths | Separate task. Bigger change |
-| 1.6 | Drop the `properties` collection from the dev DB (approved 2026-10-05, P3). Optional: remove old likes/views/comments with group `PROPERTY` | MongoDB (dev) | Do it after 1.1 works. Count documents first. Old group docs need a separate OK. `memberType: 'AGENT'` needs no change |
+| 1.6 | ✅ Done 2026-10-05. Dropped the `properties` collection from the dev DB (it had 0 documents). No likes/views/comments/notifications with group `PROPERTY` existed | MongoDB (dev) | Do it after 1.1 works. Count documents first. Old group docs need a separate OK. `memberType: 'AGENT'` needs no change |
 
 ## 2. Frontend migration (`../petoria-next`)
 
@@ -43,7 +43,7 @@ P1 (Product) and P2 (keep `AGENT`) were decided on 2026-10-05. The old "role lay
 | 3.1 | Fix the e2e expectations (I2) and prettier errors (I3) | Expect the welcome strings. Use `npx eslint --fix` **only on these two files** |
 | 3.2 | Run the tests | `npm test`, `npm run test:e2e` (the API e2e test needs MongoDB from `.env`) |
 | 3.3 | After each backend step: validation from `CLAUDE.md` | `npx tsc -p apps/petoria-api/tsconfig.app.json --noEmit`, `npx tsc -p apps/petoria-batch/tsconfig.app.json --noEmit`, `npm run build`. `npm run lint` only when file rewriting is OK |
-| 3.4 | GraphQL playground scenario after 1.1 | `signup` (AGENT) → `login` → `createProduct` (e.g. `PET` / `DOG` / `MALE`) → `getProduct` (views +1) → `getProducts` with type/species/gender/price filters → `likeTargetProduct` → `getFavorites` → open a product → `getVisited` (checks 1.2) → `createComment` (`PRODUCT`) → `getAgents`, `getAgentProducts`, admin queries |
+| 3.4 | ✅ Done 2026-10-05 (19/19 checks, see COMPLETED_TASKS §5). GraphQL scenario after 1.1 | `signup` (AGENT) → `login` → `createProduct` (e.g. `PET` / `DOG` / `MALE`) → `getProduct` (views +1) → `getProducts` with type/species/gender/price filters → `likeTargetProduct` → `getFavorites` → open a product → `getVisited` (checks 1.2) → `createComment` (`PRODUCT`) → `getAgents`, `getAgentProducts`, admin queries |
 | 3.5 | Batch run | `npm run start:dev:batch` → "BATCH SERVER READY!" (port 3008 is free again). Optionally call the service methods once to check the ranking formulas |
 | 3.6 | Frontend smoke test | `npm run dev` in `petoria-next`, visit every page, check the console for GraphQL errors |
 
@@ -53,6 +53,6 @@ P1 (Product) and P2 (keep `AGENT`) were decided on 2026-10-05. The old "role lay
 |---|---|
 | 4.1 | After each step, update `docs/ai/COMPLETED_TASKS.md` (task log, validation) and move the item out of `docs/ai/NEXT_STEPS.md` |
 | 4.2 | When P3–P7 are confirmed or changed, update their status in `docs/ai/DECISIONS.md` and the 🟡 labels in `BACKEND_MIGRATION.md` / `FRONTEND_MIGRATION.md` |
-| 4.3 | Update `CLAUDE.md` in **both** repos after the domain layer (module list `property` → `product`, batch job names, frontend migration status) |
+| 4.3 | Backend `CLAUDE.md` updated 2026-10-05. Still to do: frontend `CLAUDE.md` after the frontend migration |
 | 4.4 | Replace the default Nest `README.md` with a Petoria README (apps, scripts, env keys, without values) |
 | 4.5 | Add new useful prompts to `docs/ai/PROMPTS.md` |

@@ -19,6 +19,7 @@ export enum Message {
 	NOT_ALLOWED_REQUEST = 'Not Allowed Request!',
 	PROVIDE_ALLOWED_FORMAT = 'Please provide jpg, jpeg or png images!',
 	SELF_SUBSCRIPTION_DENIED = 'Self subscription is denied!',
+	PET_ONLY_FIELDS = 'Gender and birth date are allowed only for pet products!',
 }
 
 export enum Direction {
